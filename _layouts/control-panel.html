@@ -1,25 +1,29 @@
 ---
 layout: page
 ---
+{%- if content -%}
+<div class="content">
+{{- content -}}
+</div>
+{%- endif -%}
 
 {%- assign pages = site.pages -%}
 <table>
-  <tr>
-      <th>File Name</th>
-      <th>Title</th>
-      <th>Permalink</th>
+    <tr>
+        <th>Title</th>
+        <th>File Name</th>
+        <th>Permalink</th>
   </tr>
-  
+
   {% for pages in site.pages -%}
-     {% if pages.title %}
-  
+        {% if pages.title %}
   <tr>
-      <th>{{ pages.name }}</th>
-      <th>{{ pages.title }}</th>
-      <th>{{ pages.url }}</th>
+        <th>{{ pages.title }}</th>
+        <th>{{ pages.name }}</th>
+        <th>{{ pages.permalink }}</th>
   </tr>
   
-      {% endif %}
+        {% endif %}
   {%- endfor -%}
   </table>
   
