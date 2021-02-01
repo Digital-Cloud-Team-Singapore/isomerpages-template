@@ -8,10 +8,23 @@ layout: page
 {%- endif -%}
 
 {%- assign pages = site.pages -%}
-<div class="row is-multiline padding--bottom--lg" id="board-of-directors">
-  {%- for page in pages -%}
-    {{- page.name -}} <br>
-    {{- page.title -}} <br>
-    {{- page.url -}}
+<table>
+  <tr>
+      <th>File Name</th>
+      <th>Title</th>
+      <th>Permalink</th>
+  </tr>
+  
+  {% for pages in site.pages -%}
+     {% if pages.title %}
+  
+  <tr>
+      <th>{{ pages.name }}</th>
+      <th>{{ pages.title }}</th>
+      <th>{{ pages.url }}</th>
+  </tr>
+  
+      {% endif %}
   {%- endfor -%}
-</div>
+  </table>
+  
