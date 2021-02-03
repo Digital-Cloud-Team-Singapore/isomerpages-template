@@ -9,3 +9,12 @@ And add this line to your Jekyll site's `_config.yml`:
 ```yaml
 remote_theme: isomerpages/isomerpages-template
 ```
+
+## Local Development
+
+Install the ruby gems locally:
+```bash
+bundle install
+```
+
+
