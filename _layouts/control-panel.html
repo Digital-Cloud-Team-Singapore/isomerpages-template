@@ -30,23 +30,19 @@ layout: page
 <br>
 
 <table>
-    <tr>
-        <th>Title</th>
-        <th>File Name</th>
-        <th>Permalink</th>
-  </tr>
+      <tr>
+            <th>Title</th>
+            <th>File Name</th>
+            <th>Permalink</th>
+      </tr>
 
-  {% for post in site.posts -%}
-  {{ post.title }}
-        <!-- {% if post.title %}
-  <tr>
-        <th>{{ post.title }}</th>
-        <th>1</th>
-        <th>2</th>
-  </tr>
-  
-        {% endif %} -->
-  {%- endfor -%}
+      {% for post in site.posts -%}
+      <tr>
+            <th>{{ post.title }}</th>
+            <th>{{ post.name }}</th>
+            <th>{{ post.permalink }}</th>
+      </tr>
+      {%- endfor -%}
 </table>
 
 
