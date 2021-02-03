@@ -32,15 +32,15 @@ layout: page
 <table>
       <tr>
             <th>Title</th>
-            <th>File Name</th>
             <th>Permalink</th>
+            <th>Redirect From</th>
       </tr>
 
       {% for post in site.posts -%}
       <tr>
             <th>{{ post.title }}</th>
-            <th>{{ post.name }}</th>
             <th>{{ post.permalink }}</th>
+            <th>{{ post.redirect_from }}</th>
       </tr>
       {%- endfor -%}
 </table>
