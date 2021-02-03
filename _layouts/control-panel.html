@@ -29,7 +29,6 @@ layout: page
   
 <br>
 
-{%- assign posts = site.posts -%}
 <table>
     <tr>
         <th>Title</th>
@@ -37,15 +36,16 @@ layout: page
         <th>Permalink</th>
   </tr>
 
-  {% for posts in site.posts -%}
-        {% if post.title %}
+  {% for post in site.posts -%}
+  {{ post }}
+        <!-- {% if post.title %}
   <tr>
         <th>{{ post.title }}</th>
         <th>1</th>
         <th>2</th>
   </tr>
   
-        {% endif %}
+        {% endif %} -->
   {%- endfor -%}
 </table>
 
