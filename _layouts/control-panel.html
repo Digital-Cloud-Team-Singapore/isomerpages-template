@@ -27,3 +27,26 @@ layout: page
   {%- endfor -%}
   </table>
   
+<br>
+
+{%- assign posts = site.posts -%}
+<table>
+    <tr>
+        <th>Title</th>
+        <th>File Name</th>
+        <th>Permalink</th>
+  </tr>
+
+  {% for posts in site.posts -%}
+        {% if post.title %}
+  <tr>
+        <th>{{ post.title }}</th>
+        <th>1</th>
+        <th>2</th>
+  </tr>
+  
+        {% endif %}
+  {%- endfor -%}
+</table>
+
+
