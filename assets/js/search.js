@@ -18,6 +18,13 @@ var runSearch = function runSearch(json_data, posts_data) {
     searchTerm = ' ';
   }
 
+  var searchTypeUrlQueryParam = new URLSearchParams(window.location.search);
+  var searchType = searchTypeUrlQueryParam.get('search-type') || 'content-search'
+  document.querySelector(`input[name="search-type"][value="${searchType}"]`).click()
+  searchType = document.querySelector('input[name="search-type"]:checked').value;
+
+  console.log('>>> Search Type', searchType);
+
   if (searchTerm) {
     document.getElementById('search-box-search').value = searchTerm;
     // Load the pre-built lunr index
@@ -25,11 +32,25 @@ var runSearch = function runSearch(json_data, posts_data) {
 
     // Get lunr to perform a search
     results = idx.search(searchTerm);
+    console.log('>>>> Posts Data', posts_data);
+    console.log('>>>> Results', results);
     pageResults = splitPages(results, RESULTS_PER_PAGE);
 
     window.onload = displaySearchResults(searchTerm);
   }
 };
+
+
+
+
+
+
+
+
+
+
+
+// -------------------------------- CODE FOR CONTENT SEARCH ----------------------------------------------
 
 // Bolds the keywords in the preview string
 function highlightKeywords(content, previewStartPosition, matchMetadata) {
@@ -194,3 +215,19 @@ function getQueryVariable(variable) {
     }
   }
 }
+
+// ----------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+// ---------------------------------------------- CODE FOR DOCUMENT SEARCH ----------------------------------------------------------------
+
+
+
+
+// ----------------------------------------------------------------------------------------------------------------------------------------

@@ -12,7 +12,7 @@ layout: skeleton
 	<div class="bp-container">
 		<div class="row">
 			<div id="search-title" class="col is-8 is-offset-2">
-		      	<h1 class="has-text-white"><b>{{- page.title -}}</b></h1>
+        <h1 class="has-text-white"><b>{{- page.title -}}</b></h1>
 			</div>
 		</div>
 	</div>
@@ -26,7 +26,6 @@ layout: skeleton
                   <span class="is-large is-left">
                     <i class="sgds-icon sgds-icon-search is-size-4 search-bar"></i>
                   </span>
-
               </div>
               <div class="control">
                   <button type="submit" class="bp-button is-secondary is-medium has-text-white search-button">SEARCH</button>
@@ -34,6 +33,31 @@ layout: skeleton
           </div>
 				</div>
 			</div>
+      <div class="bp-container">
+        <div class="row col is-8 right-padding-zero is-offset-2">
+          <div class="field">
+            <div class="control">
+              <label class="radio">
+                <input type="radio" name="search-type" value="content-search"/>
+                  &nbsp;
+                  <font color="white">
+                    <span class="sgds-icon sgds-icon-file-alt" role="img" aria-label="iconName"></span>
+                    Content Search
+                  </font>
+              </label>
+              &nbsp;&nbsp;&nbsp;&nbsp;
+              <label class="radio">
+                <input type="radio" name="search-type" value="document-search" />
+                  &nbsp;
+                  <font color="white">
+                    <span class="sgds-icon sgds-icon-file-pdf" role="img" aria-label="iconName"></span>
+                    Document Search
+                  </font>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
 		</form>
 	</div>
 </section>
