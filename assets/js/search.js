@@ -1,233 +1,227 @@
-'use strict';
+'use strict'
 
-var RESULTS_PER_PAGE = 10;
-var MAX_ADJACENT_PAGE_BTNS = 2;
-var MAX_ADJACENT_MOBILE_PAGE_BTNS = 1;
-var PREVIEW_SIZE = 300;
-var NUM_LEADING_CHARS = 30;
-var results = void 0;
-var postsData = void 0;
-var pageResults = void 0;
-var currentPageIndex = 0;
+const RESULTS_PER_PAGE = 10
+const MAX_ADJACENT_PAGE_BTNS = 2
+const MAX_ADJACENT_MOBILE_PAGE_BTNS = 1
+const PREVIEW_SIZE = 300
+const NUM_LEADING_CHARS = 30
+let results = void 0
+let postsData = void 0
+let pageResults = void 0
+const currentPageIndex = 0
 
-var runSearch = function runSearch(json_data, posts_data) {
-  postsData = posts_data;
-  var searchTerm = getQueryVariable('query');
+const runSearch = function runSearch (json_data, posts_data) {
+  postsData = posts_data
+  let searchTerm = getQueryVariable('query')
 
   if (!searchTerm || searchTerm === '+') {
-    searchTerm = ' ';
+    searchTerm = ' '
   }
 
-  var searchTypeUrlQueryParam = new URLSearchParams(window.location.search);
-  var searchType = searchTypeUrlQueryParam.get('search-type') || 'content-search'
+  document.getElementById('search-box-search').value = searchTerm
+
+  // Radio button check box logic
+  const searchTypeUrlQueryParam = new URLSearchParams(window.location.search)
+  let searchType = searchTypeUrlQueryParam.get('search-type') || 'content-search'
   document.querySelector(`input[name="search-type"][value="${searchType}"]`).click()
-  searchType = document.querySelector('input[name="search-type"]:checked').value;
+  searchType = document.querySelector('input[name="search-type"]:checked').value
 
-  console.log('>>> Search Type', searchType);
-
-  if (searchTerm) {
-    document.getElementById('search-box-search').value = searchTerm;
+  if (searchTerm && searchType === 'content-search') {
     // Load the pre-built lunr index
-    var idx = lunr.Index.load(JSON.parse(json_data));
-
+    const idx = lunr.Index.load(JSON.parse(json_data))
     // Get lunr to perform a search
-    results = idx.search(searchTerm);
-    console.log('>>>> Posts Data', posts_data);
-    console.log('>>>> Results', results);
-    pageResults = splitPages(results, RESULTS_PER_PAGE);
+    results = idx.search(searchTerm)
+    console.log('>>>> Posts Data', posts_data)
+    console.log('>>>> Results', results)
+    pageResults = splitPages(results, RESULTS_PER_PAGE)
 
-    window.onload = displaySearchResults(searchTerm);
+    window.onload = displaySearchResults(searchTerm)
   }
-};
 
+  if (searchTerm && searchType === 'document-search') {
+    const documentSearchLambdaUrl = document.getElementById('document_search_lambda_url').innerHTML
+    const xhr = new XMLHttpRequest()
+    xhr.addEventListener('readystatechange', function () {
+      if (this.readyState === 4) {
+        console.log(this.responseText)
+      }
+    })
 
-
-
-
-
-
-
-
-
+    xhr.open('POST', `${documentSearchLambdaUrl}/api/documentsearch`)
+    xhr.setRequestHeader('x-api-key', '') // Simple API key to prevents bots from spamming
+    xhr.send()
+  }
+}
 
 // -------------------------------- CODE FOR CONTENT SEARCH ----------------------------------------------
 
 // Bolds the keywords in the preview string
-function highlightKeywords(content, previewStartPosition, matchMetadata) {
-  var matchMap = {};
+function highlightKeywords (content, previewStartPosition, matchMetadata) {
+  const matchMap = {}
 
   // Create an object containing search hit position and length of search hit in the document (for content within preview)
-  for (var keyword in matchMetadata) {
-    var positionArray;
+  for (const keyword in matchMetadata) {
+    var positionArray
 
-    if (!matchMetadata[keyword]['content']) {
-      return;
+    if (!matchMetadata[keyword].content) {
+      return
     }
 
-    positionArray = matchMetadata[keyword]['content']['position'];
+    positionArray = matchMetadata[keyword].content.position
 
-    for (var positionIndex = 0; positionIndex < positionArray.length; positionIndex++) {
-      var hitPosition = positionArray[positionIndex][0];
+    for (let positionIndex = 0; positionIndex < positionArray.length; positionIndex++) {
+      const hitPosition = positionArray[positionIndex][0]
       if (hitPosition >= previewStartPosition && hitPosition < previewStartPosition + PREVIEW_SIZE) {
-        matchMap[hitPosition] = positionArray[positionIndex][1];
+        matchMap[hitPosition] = positionArray[positionIndex][1]
       }
     }
   }
 
   // Go through each search hit and bold it
   if (Object.keys(matchMap).length !== 0) {
-    var processedPreview = '';
-    var currPosition = previewStartPosition;
-    for (var wordPosition in matchMap) {
-      var wordEnd = parseInt(wordPosition) + parseInt(matchMap[wordPosition]) + 1;
-      processedPreview += content.substring(currPosition, wordPosition) + '<b>' + content.substring(wordPosition, wordEnd) + '</b>';
-      currPosition = wordEnd;
+    let processedPreview = ''
+    let currPosition = previewStartPosition
+    for (const wordPosition in matchMap) {
+      var wordEnd = parseInt(wordPosition) + parseInt(matchMap[wordPosition]) + 1
+      processedPreview += content.substring(currPosition, wordPosition) + '<b>' + content.substring(wordPosition, wordEnd) + '</b>'
+      currPosition = wordEnd
     }
 
     if (wordEnd < previewStartPosition + PREVIEW_SIZE) {
-      processedPreview += content.substring(currPosition, previewStartPosition + PREVIEW_SIZE);
+      processedPreview += content.substring(currPosition, previewStartPosition + PREVIEW_SIZE)
     }
-    return processedPreview;
+    return processedPreview
   }
 
-  return content.substring(previewStartPosition, previewStartPosition + PREVIEW_SIZE);
+  return content.substring(previewStartPosition, previewStartPosition + PREVIEW_SIZE)
 }
 
 // Find the earliest space in the preview closest to (firstPosition - NUM_LEADING_CHARS)
-function returnStartOfPreview(content, firstPosition) {
+function returnStartOfPreview (content, firstPosition) {
   if (firstPosition - NUM_LEADING_CHARS <= 0) {
-    return 0;
+    return 0
   } else {
-    for (var index = firstPosition - NUM_LEADING_CHARS; index < firstPosition; index++) {
+    for (let index = firstPosition - NUM_LEADING_CHARS; index < firstPosition; index++) {
       if (content.charAt(index) === ' ') {
-        return index;
+        return index
       }
     }
-    return firstPosition;
+    return firstPosition
   }
 }
 
 // Find the position of the first keyword match in the document
-function returnFirstKeywordPosition(matchMetadata) {
-  var firstPosition = -1;
+function returnFirstKeywordPosition (matchMetadata) {
+  let firstPosition = -1
 
   // Iterate over each keyword in the search query
-  for (var keyword in matchMetadata) {
-
-    if (matchMetadata[keyword]['content'] !== undefined) {
-      var positionArray = matchMetadata[keyword]['content']['position'];
+  for (const keyword in matchMetadata) {
+    if (matchMetadata[keyword].content !== undefined) {
+      const positionArray = matchMetadata[keyword].content.position
 
       // Find the earliest first position across all keywords
-      for (var positionIndex = 0; positionIndex < positionArray.length; positionIndex++) {
+      for (let positionIndex = 0; positionIndex < positionArray.length; positionIndex++) {
         if (firstPosition == -1 || firstPosition > positionArray[positionIndex][0]) {
-          firstPosition = positionArray[positionIndex][0];
+          firstPosition = positionArray[positionIndex][0]
         }
       }
     }
   }
 
-  return firstPosition;
+  return firstPosition
 }
 
 // Return the preview content for each search result - returns the snippet that has the first hit in the document (up to 300 chars)
-function returnResultsList(results) {
-  var searchPara = '';
-  var post_data = postsData; // Obtain JSON var of all the posts in the site
-
+function returnResultsList (results) {
+  let searchPara = ''
+  const post_data = postsData // Obtain JSON var of all the posts in the site
 
   // Iterate over the results
-  for (var i = 0; i < results.length; i++) {
-    var key = parseInt(results[i]['ref']);
-    var resultObject = post_data[key];
-    var matchMetadata = results[i]['matchData']['metadata'];
+  for (let i = 0; i < results.length; i++) {
+    const key = parseInt(results[i].ref)
+    const resultObject = post_data[key]
+    const matchMetadata = results[i].matchData.metadata
 
-    var titleTruncateLength = 90;
-    var resultTitle = resultObject['title'].substring(0, titleTruncateLength);
+    const titleTruncateLength = 90
+    var resultTitle = resultObject.title.substring(0, titleTruncateLength)
 
-    if (resultObject['title'].length > titleTruncateLength) {
-      var indexOfLastWord = resultObject['title'].substring(0, titleTruncateLength).lastIndexOf(" ");
-      var resultTitle = resultObject['title'].substring(0, indexOfLastWord);
-      resultTitle += ' ...';
+    if (resultObject.title.length > titleTruncateLength) {
+      const indexOfLastWord = resultObject.title.substring(0, titleTruncateLength).lastIndexOf(' ')
+      var resultTitle = resultObject.title.substring(0, indexOfLastWord)
+      resultTitle += ' ...'
     }
-    searchPara += '<a class="search-content" href="' + resultObject['url'] + '">' + ' ' + resultTitle + '</a>';
+    searchPara += '<a class="search-content" href="' + resultObject.url + '">' + ' ' + resultTitle + '</a>'
 
     // Find the position of the earliest keyword in the document
-    var firstPosition = returnFirstKeywordPosition(matchMetadata);
+    const firstPosition = returnFirstKeywordPosition(matchMetadata)
 
     // Find the preview start position
-    var previewStartPosition = returnStartOfPreview(resultObject['content'], firstPosition);
+    const previewStartPosition = returnStartOfPreview(resultObject.content, firstPosition)
 
     // Process the preview to embolden keywords
-    var processedPreview = highlightKeywords(resultObject['content'], previewStartPosition, matchMetadata);
+    const processedPreview = highlightKeywords(resultObject.content, previewStartPosition, matchMetadata)
     // var postDate = new Date(resultObject['datestring']).toDateString().substring(4);
-    searchPara += '<p class="search-content permalink">' + resultObject['url'] + '</p><br>';
+    searchPara += '<p class="search-content permalink">' + resultObject.url + '</p><br>'
     // searchPara += '<p class="search-content" > '+ postDate + ' ...' + processedPreview + '...</p><br>';
 
     if (processedPreview) {
-      searchPara += '<p class="search-content" > ' + ' ...' + processedPreview + '...</p><br>';
+      searchPara += '<p class="search-content" > ' + ' ...' + processedPreview + '...</p><br>'
     }
   }
 
-  return searchPara;
+  return searchPara
 }
 
 // Display search results if there are results, else, state that there are no results found
-function displaySearchResults(searchTerm) {
-  document.getElementById("loading-spinner").style.display = 'none';
-  var searchResultsCount = document.getElementById('search-results-count');
-  searchResultsCount.innerHTML = results.length + " result";
-  searchResultsCount.innerHTML += (results.length === 1) ? " " : "s "; 
-  searchResultsCount.innerHTML += "for '" + searchTerm + "'";
-  document.getElementsByName('query')[1].setAttribute("value", searchTerm);
+function displaySearchResults (searchTerm) {
+  document.getElementById('loading-spinner').style.display = 'none'
+  const searchResultsCount = document.getElementById('search-results-count')
+  searchResultsCount.innerHTML = results.length + ' result'
+  searchResultsCount.innerHTML += (results.length === 1) ? ' ' : 's '
+  searchResultsCount.innerHTML += "for '" + searchTerm + "'"
+  document.getElementsByName('query')[1].setAttribute('value', searchTerm)
 
-  paginateSearchResults();
-  if (!results.length || pageResults.length <= 1) return;
-  displayPagination();
+  paginateSearchResults()
+  if (!results.length || pageResults.length <= 1) return
+  displayPagination()
 }
 
-function paginateSearchResults() {
-  if (!results.length) return;
-  var searchPageIndicator = document.getElementById('search-page-indicator');
-  searchPageIndicator.style.display = pageResults.length > 1 ? "flex" : "none";
-  searchPageIndicator.innerHTML = "Page " + (currentPageIndex + 1) + " of " + pageResults.length;
+function paginateSearchResults () {
+  if (!results.length) return
+  const searchPageIndicator = document.getElementById('search-page-indicator')
+  searchPageIndicator.style.display = pageResults.length > 1 ? 'flex' : 'none'
+  searchPageIndicator.innerHTML = 'Page ' + (currentPageIndex + 1) + ' of ' + pageResults.length
 
-  var searchResults = document.getElementById('search-results');
-  searchResults.innerHTML = returnResultsList(pageResults[currentPageIndex]);
-  document.getElementsByClassName("search-results-display")[0].style.display = 'block';
+  const searchResults = document.getElementById('search-results')
+  searchResults.innerHTML = returnResultsList(pageResults[currentPageIndex])
+  document.getElementsByClassName('search-results-display')[0].style.display = 'block'
 }
 
-function changePage(curr, index) {
-  changePageUtil(curr, index);
-  paginateSearchResults();
+function changePage (curr, index) {
+  changePageUtil(curr, index)
+  paginateSearchResults()
 }
 
 // Obtain the query string, load the pre-built lunr index, and perform search
-function getQueryVariable(variable) {
-  var query = window.location.search.substring(1);
-  var vars = query.split('&');
+function getQueryVariable (variable) {
+  const query = window.location.search.substring(1)
+  const vars = query.split('&')
 
-  for (var i = 0; i < vars.length; i++) {
-    var pair = vars[i].split('=');
+  for (let i = 0; i < vars.length; i++) {
+    const pair = vars[i].split('=')
 
     if (pair[0] === variable) {
-      var dirtyString = decodeURIComponent(pair[1].replace(/\+/g, '%20'));
-      return DOMPurify.sanitize(dirtyString, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] });
+      const dirtyString = decodeURIComponent(pair[1].replace(/\+/g, '%20'))
+      return DOMPurify.sanitize(dirtyString, {
+        ALLOWED_TAGS: [],
+        ALLOWED_ATTR: []
+      })
     }
   }
 }
 
 // ----------------------------------------------------------------------------------------------------------------------------------------
 
-
-
-
-
-
-
-
 // ---------------------------------------------- CODE FOR DOCUMENT SEARCH ----------------------------------------------------------------
-
-
-
 
 // ----------------------------------------------------------------------------------------------------------------------------------------
