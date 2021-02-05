@@ -7,6 +7,21 @@ layout: page
 </div>
 {%- endif -%}
 
+
+<h3>Theme</h3>
+<table>
+      <tr>
+          <th>Primary Color</th>
+          <th>Secondary Color</th>
+      </tr>
+
+      <tr>
+          <th>{{ site.primary }}</th>
+          <th>{{ site.secondary }}</th>
+      </tr>
+    
+</table>
+
 {%- assign pages = site.pages -%}
 <h3>Pages</h3>
 Edit your pages titles and permalink here
@@ -28,7 +43,7 @@ Edit your pages titles and permalink here
   
         {% endif %}
   {%- endfor -%}
-  </table>
+</table>
   
 <br>
 
