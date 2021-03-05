@@ -266,7 +266,7 @@ var runSearch = function runSearch (json_data, posts_data) {
   if (searchTerm && searchType === 'document-search') {
     var documentSearchLambdaUrl = document.getElementById('document_search_lambda_url').innerHTML
     console.log('>>> documentSearchLambdaUrl', documentSearchLambdaUrl)
-    var data = JSON.stringify({ query: 'What is diabetes?' })
+    var data = JSON.stringify({ query: 'How do I declare bankruptcy?' })
 
     var xhr = new XMLHttpRequest()
     xhr.withCredentials = true
