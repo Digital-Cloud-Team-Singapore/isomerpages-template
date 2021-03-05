@@ -15,7 +15,7 @@
 # in the templates via {{- site.myvariable -}}.
 title: Isomer Pages Template
 url: "https://www.tech.gov.sg" # the base hostname & protocol for your site, e.g. http://example.com
-document_search_lambda_url: 'abc.com'
+document_search_lambda_url: 'http://localhost:8080/api/kendrasearch'
 
 # Build settings
 plugins:

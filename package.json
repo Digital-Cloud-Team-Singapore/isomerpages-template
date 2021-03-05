@@ -1,21 +1,14 @@
 {
   "name": "isomerpages-template",
   "version": "1.0.0",
-  "description": "## Usage",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Digital-Cloud-Team-Singapore/isomerpages-template.git"
-  },
-  "author": "",
+  "description": "Please run `npm install` to enable ESLint for your javascript code in this project.",
   "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/Digital-Cloud-Team-Singapore/isomerpages-template/issues"
+  "repository": {},
+  "main": "none",
+  "scripts": {
+    "start": "bundle exec jekyll serve --livereload",
+    "installation": "bundle install"
   },
-  "homepage": "https://github.com/Digital-Cloud-Team-Singapore/isomerpages-template#readme",
   "devDependencies": {
     "eslint": "^7.19.0",
     "eslint-config-standard": "^16.0.2",
