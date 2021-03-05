@@ -49,7 +49,7 @@ var runSearch = function runSearch (json_data, posts_data) {
       }
     })
 
-    xhr.open('POST', 'localhost:8080/api/kendrasearch')
+    xhr.open('POST', `${documentSearchLambdaUrl}/api/kendrasearch`)
     xhr.setRequestHeader('x-api-key', '61fa2710-794c-4fd9-9d86-52d27dcd6efd')
     xhr.setRequestHeader('Content-Type', 'application/json')
 
