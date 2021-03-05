@@ -38,18 +38,113 @@ var runSearch = function runSearch (json_data, posts_data) {
   if (searchTerm && searchType === 'document-search') {
     var documentSearchLambdaUrl = document.getElementById('document_search_lambda_url').innerHTML
     console.log('>>> documentSearchLambdaUrl', documentSearchLambdaUrl)
-    var data = JSON.stringify({ query: 'What is diabetes?' })
+    var data = JSON.stringify({ query: searchTerm || '' })
 
     var xhr = new XMLHttpRequest()
-    xhr.withCredentials = true
+    xhr.withCredentials = false
 
     xhr.addEventListener('readystatechange', function () {
       if (this.readyState === 4) {
-        console.log(this.responseText)
+        console.log('>>>> this.responseText', this.responseText)
+        var documents = (JSON.parse(this.responseText)).data
+        console.log('>>>>>> documents', documents)
+        if (documents) {
+          // -------- CODE HERE--------
+          // var idx = lunr.Index.load(JSON.parse(json_data))
+          var idx = lunr(function () {
+            this.ref('id')
+            this.field('title')
+            this.field('body')
+            for (let index = 0; index < documents.length; index++) {
+              var documentObj = documents[index]
+              if (documentObj.Type === 'DOCUMENT' || documentObj.Type === 'ANSWER') {
+                this.add({
+                  id: documentObj.Id,
+                  title: documentObj.DocumentTitle.Text,
+                  body: documentObj.DocumentExcerpt.Text
+                })
+              }
+            }
+          })
+
+          console.log('>>> idx', idx)
+          // searchTerm = '*' + searchTerm + '*'
+          results = idx.search(searchTerm)
+          pageResults = splitPages(results, RESULTS_PER_PAGE)
+
+          console.log('>>> results', results)
+          console.log('>>> searchTerm', searchTerm)
+          console.log('>>> pageResults', pageResults)
+          document.getElementById('loading-spinner').style.display = 'none'
+          var searchResultsCount = document.getElementById('search-results-count')
+          searchResultsCount.innerHTML = documents.length + ' result'
+          searchResultsCount.innerHTML += (documents.length === 1) ? ' ' : 's '
+          searchResultsCount.innerHTML += "for '" + searchTerm + "'"
+          document.getElementsByName('query')[1].setAttribute('value', searchTerm)
+          if (!results.length) return
+          var searchPageIndicator = document.getElementById('search-page-indicator')
+          searchPageIndicator.style.display = pageResults.length > 1 ? 'flex' : 'none'
+          searchPageIndicator.innerHTML = 'Page ' + (currentPageIndex + 1) + ' of ' + pageResults.length
+          var searchResults = document.getElementById('search-results')
+          searchResults.innerHTML = (function (results) {
+            let searchPara = ''
+            // var post_data = postsData // Obtain JSON var of all the posts in the site
+
+            // Iterate over the results
+            for (let i = 0; i < results.length; i++) {
+              // var key = parseInt(results[i].ref)
+              // var resultObject = post_data[key]
+              var resultElement = results[i]
+              var resultDocument = documents.find(documentObj => documentObj.Id === resultElement.ref)
+              // var matchMetadata = results[i].matchData.metadata
+              var matchMetadata = results[i].matchData.metadata
+
+              var titleTruncateLength = 90
+              // var resultTitle = resultObject.title.substring(0, titleTruncateLength)
+              var resultTitle = resultDocument.DocumentTitle.Text.substring(0, titleTruncateLength)
+
+              if (resultDocument.DocumentTitle.Text.length > titleTruncateLength) {
+                var indexOfLastWord = resultDocument.DocumentTitle.Text.substring(0, titleTruncateLength).lastIndexOf(' ')
+                var resultTitle = resultDocument.DocumentTitle.Text.substring(0, indexOfLastWord)
+                resultTitle += ' ...'
+              }
+              // searchPara += '<a class="search-content" href="' + resultObject.url + '">' + ' ' + resultTitle + '</a>'
+              searchPara += '<a class="search-content" href="' + '#' + '">' + ' ' + resultTitle + '</a>'
+
+              // Find the position of the earliest keyword in the document
+              // var firstPosition = returnFirstKeywordPosition(matchMetadata)
+
+              // // Find the preview start position
+              // var previewStartPosition = returnStartOfPreview(resultDocument.DocumentExcerpt.Text, firstPosition)
+
+              // // Process the preview to embolden keywords
+              // var processedPreview = highlightKeywords(resultDocument.DocumentExcerpt.Text, previewStartPosition, matchMetadata)
+              // var postDate = new Date(resultObject['datestring']).toDateString().substring(4);
+              // searchPara += '<p class="search-content permalink">' + resultObject.url + '</p><br>'
+
+              searchPara += '<p class="search-content permalink">' + 'Document ID: ' + resultDocument.DocumentId + '</p><br>'
+              // searchPara += '<p class="search-content" > '+ postDate + ' ...' + processedPreview + '...</p><br>';
+
+              // if (processedPreview) {
+              //   searchPara += '<p class="search-content" > ' + ' ...' + processedPreview + '...</p><br>'
+              // }
+
+              if (resultDocument.DocumentExcerpt.Text) {
+                searchPara += '<p class="search-content" > ' + ' ...' + resultDocument.DocumentExcerpt.Text + '...</p><br>'
+              }
+            }
+
+            return searchPara
+          })(pageResults[currentPageIndex])
+          document.getElementsByClassName('search-results-display')[0].style.display = 'block'
+          if (!results.length || pageResults.length <= 1) return
+          displayPagination()
+          // --------------------------
+        }
       }
     })
 
-    xhr.open('POST', `${documentSearchLambdaUrl}/api/kendrasearch`)
+    xhr.open('POST', `${documentSearchLambdaUrl}`)
     xhr.setRequestHeader('x-api-key', '61fa2710-794c-4fd9-9d86-52d27dcd6efd')
     xhr.setRequestHeader('Content-Type', 'application/json')
 
@@ -565,96 +660,6 @@ var runSearch = function runSearch (json_data, posts_data) {
         }
       }
     ]
-    // -------- CODE HERE--------
-    // var idx = lunr.Index.load(JSON.parse(json_data))
-    var idx = lunr(function () {
-      this.ref('id')
-      this.field('title')
-      this.field('body')
-      for (let index = 0; index < documents.length; index++) {
-        var documentObj = documents[index]
-        if (documentObj.Type === 'DOCUMENT' || documentObj.Type === 'ANSWER') {
-          this.add({
-            id: documentObj.Id,
-            title: documentObj.DocumentTitle.Text,
-            body: documentObj.DocumentExcerpt.Text
-          })
-        }
-      }
-    })
-    console.log('>>> idx', idx)
-    searchTerm = '*' + searchTerm + '*'
-    results = idx.search(searchTerm)
-    pageResults = splitPages(results, RESULTS_PER_PAGE)
-
-    console.log('>>> results', results)
-    console.log('>>> searchTerm', searchTerm)
-    console.log('>>> pageResults', pageResults)
-    document.getElementById('loading-spinner').style.display = 'none'
-    var searchResultsCount = document.getElementById('search-results-count')
-    searchResultsCount.innerHTML = documents.length + ' result'
-    searchResultsCount.innerHTML += (documents.length === 1) ? ' ' : 's '
-    searchResultsCount.innerHTML += "for '" + searchTerm + "'"
-    document.getElementsByName('query')[1].setAttribute('value', searchTerm)
-    if (!results.length) return
-    var searchPageIndicator = document.getElementById('search-page-indicator')
-    searchPageIndicator.style.display = pageResults.length > 1 ? 'flex' : 'none'
-    searchPageIndicator.innerHTML = 'Page ' + (currentPageIndex + 1) + ' of ' + pageResults.length
-    var searchResults = document.getElementById('search-results')
-    searchResults.innerHTML = (function (results) {
-      let searchPara = ''
-      // var post_data = postsData // Obtain JSON var of all the posts in the site
-
-      // Iterate over the results
-      for (let i = 0; i < results.length; i++) {
-        // var key = parseInt(results[i].ref)
-        // var resultObject = post_data[key]
-        var resultElement = results[i]
-        var resultDocument = documents.find(documentObj => documentObj.Id === resultElement.ref)
-        // var matchMetadata = results[i].matchData.metadata
-        var matchMetadata = results[i].matchData.metadata
-
-        var titleTruncateLength = 90
-        // var resultTitle = resultObject.title.substring(0, titleTruncateLength)
-        var resultTitle = resultDocument.DocumentTitle.Text.substring(0, titleTruncateLength)
-
-        if (resultDocument.DocumentTitle.Text.length > titleTruncateLength) {
-          var indexOfLastWord = resultDocument.DocumentTitle.Text.substring(0, titleTruncateLength).lastIndexOf(' ')
-          var resultTitle = resultDocument.DocumentTitle.Text.substring(0, indexOfLastWord)
-          resultTitle += ' ...'
-        }
-        // searchPara += '<a class="search-content" href="' + resultObject.url + '">' + ' ' + resultTitle + '</a>'
-        searchPara += '<a class="search-content" href="' + '#' + '">' + ' ' + resultTitle + '</a>'
-
-        // Find the position of the earliest keyword in the document
-        // var firstPosition = returnFirstKeywordPosition(matchMetadata)
-
-        // // Find the preview start position
-        // var previewStartPosition = returnStartOfPreview(resultDocument.DocumentExcerpt.Text, firstPosition)
-
-        // // Process the preview to embolden keywords
-        // var processedPreview = highlightKeywords(resultDocument.DocumentExcerpt.Text, previewStartPosition, matchMetadata)
-        // var postDate = new Date(resultObject['datestring']).toDateString().substring(4);
-        // searchPara += '<p class="search-content permalink">' + resultObject.url + '</p><br>'
-
-        searchPara += '<p class="search-content permalink">' + 'Document ID: ' + resultDocument.DocumentId + '</p><br>'
-        // searchPara += '<p class="search-content" > '+ postDate + ' ...' + processedPreview + '...</p><br>';
-
-        // if (processedPreview) {
-        //   searchPara += '<p class="search-content" > ' + ' ...' + processedPreview + '...</p><br>'
-        // }
-
-        if (resultDocument.DocumentExcerpt.Text) {
-          searchPara += '<p class="search-content" > ' + ' ...' + resultDocument.DocumentExcerpt.Text + '...</p><br>'
-        }
-      }
-
-      return searchPara
-    })(pageResults[currentPageIndex])
-    document.getElementsByClassName('search-results-display')[0].style.display = 'block'
-    if (!results.length || pageResults.length <= 1) return
-    displayPagination()
-    // --------------------------
   }
 }
 
