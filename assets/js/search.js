@@ -146,6 +146,7 @@ var runSearch = function runSearch (json_data, posts_data) {
 
     xhr.open('POST', `${documentSearchLambdaUrl}`)
     xhr.setRequestHeader('x-api-key', '61fa2710-794c-4fd9-9d86-52d27dcd6efd')
+    xhr.setRequestHeader('apikey', '4hEsHZM6Q3i3ymLDniqDYkFWlxz7ngwg')
     xhr.setRequestHeader('Content-Type', 'application/json')
 
     xhr.send(data)
